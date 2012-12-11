@@ -1,8 +1,10 @@
 (ns httpc.ui.main
-  (:use [seesaw core mig]))
+  (:use (seesaw core mig)))
 
 (defn create-main-form []
-  (let [form (box-panel)]))
+  (let [form
+        (mig-panel
+          :items [[]])]))
 
 (defn create-main-frame
   [])
