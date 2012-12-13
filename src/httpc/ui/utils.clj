@@ -26,6 +26,12 @@
       (update-at! target i rj)
       (update-at! target j ri))))
 
+(defn relative-location!
+  "Applies Window#setPositionRelativeTo to target and parent and returns target."
+  [target parent]
+  (.setLocationRelativeTo target parent)
+  target)
+
 (defmacro listen-for
   "Simple wrapper for (seesaw.core/listen) for more fluent definition of listeners."
   [target event arglist & body]

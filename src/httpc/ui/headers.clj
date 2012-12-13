@@ -1,5 +1,6 @@
 (ns httpc.ui.headers
-  (:use (seesaw core mig)))
+  (:use (seesaw core mig))
+  (:use httpc.ui.utils))
 
 (defn create-header-dialog-content
   "Creates a panel with header dialog contents."
@@ -24,4 +25,4 @@
         :content (create-header-dialog-content default-name default-value)
         :option-type :ok-cancel
         :success-fn header-dialog-ok-handler)
-    pack! show!))
+    pack! (relative-location! parent) show!))
