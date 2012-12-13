@@ -1,5 +1,7 @@
 (ns httpc.ui.main
   (:use (seesaw core mig table))
+  (:use httpc.utils
+        httpc.ui.utils)
   (:require [httpc.ui.headers :as h]))
 
 (defn- create-main-form
@@ -40,11 +42,6 @@
                       [(scrollable body-text-area) "spanx 3,grow,pushy"]])]
         form))))
 
-(defn selected?
-  "Returns true when the component is selected, e.g. radio button is checked."
-  [w]
-  (config w :selected?))
-
 (defn- get-request-type
   [w]
   (let [{:keys [request-get-type request-post-type request-put-type request-delete-type]} (group-by-id w)]
@@ -64,11 +61,43 @@
                 address-box headers-table body-text-area]} (group-by-id w)
         request-type (get-request-type w)
         headers-model (config headers-table :model)]
+
     ; Add reactions to header manipulation buttons
-    (listen add-header-button :action
-      (fn [_]
-        (when-let [[header value] (h/ask-header-values :parent w)]
-          (insert-at! headers-model (.getRowCount headers-model) {:name header :value value})))))
+    (listen-for add-header-button :action [_]
+      (when-let [[header value] (h/ask-header-values :parent w)]
+        (append! headers-model {:name header :value value})))
+
+    (listen-for delete-header-button :action [_]
+      (when-let [sel-idxs (selection headers-table {:multi? true})]
+        (apply remove-at! headers-model sel-idxs)))
+
+    (listen-for clear-headers-button :action [_]
+      (clear! headers-model))
+
+    (listen-for move-header-up-button :action [_]
+      (let [sel-idxs (selection headers-table {:multi? true})
+            new-sel-idxs (map dec sel-idxs)]
+        (when (not-any? #(= 0 %) sel-idxs)
+          (doseq [[oi ni] (zip sel-idxs new-sel-idxs)]
+            (swap-at! headers-model oi ni))
+          (selection! headers-table {:multi? true} new-sel-idxs))))
+
+    (listen-for move-header-down-button :action [_]
+      (let [sel-idxs (selection headers-table {:multi? true})
+            new-sel-idxs (map inc sel-idxs)]
+        (when (not-any? #(= (dec (model-size headers-model)) %) sel-idxs)
+          (doseq [[oi ni] (zip sel-idxs new-sel-idxs)]
+            (swap-at! headers-model oi ni))
+          (selection! headers-table {:multi? true} new-sel-idxs))))
+
+    (listen-for headers-table :mouse-clicked [e]
+      (when (= (.getClickCount e) 2)  ; double click
+        (when-let [sel-idx (selection headers-table)]
+          (let [{:keys [name value]} (value-at headers-model sel-idx)]
+            (when-let [[new-name new-value] (h/ask-header-values :parent w :default-name name :default-value value)]
+              (update-at! headers-model sel-idx {:name new-name :value new-value}))))))
+
+    )
   w)
 
 (defn create-main-frame

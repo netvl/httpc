@@ -5,6 +5,7 @@
   :exclusions [org.clojure/clojure]
 
   :aot :all
+  :warn-on-reflection true
 
   :source-paths ["src"]
   :resources-paths ["resources"]
