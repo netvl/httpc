@@ -2,7 +2,9 @@
   (:use (seesaw core mig table))
   (:use httpc.utils
         httpc.ui.utils)
-  (:require [httpc.ui.headers :as h]))
+  (:require [httpc.ui.headers :as h]
+            [httpc.ui.result :as r]
+            [httpc.net.http :as http]))
 
 (defn- create-main-form
   "Creates a panel containing main user interface."
@@ -29,7 +31,7 @@
       (let [form
             (mig-panel
               :id :main-panel
-              :constraints ["height 500" "[][grow][]" ""]
+              :constraints ["height 500" "[][grow][]" "[][][][grow][][grow]"]
               :items [[address-box "spanx 2,growx"] [send-button "wrap"]
                       ["Method" ""] [request-get-type "split,sg methods"] [request-post-type "sg methods"]
                                     [request-put-type "sg methods"] [request-delete-type "sg methods,wrap"]
@@ -37,9 +39,9 @@
                                      [clear-headers-button "sg actions"] [move-header-up-button "sg actions"]
                                      [move-header-down-button "sg actions,wrap"]
                       ; TODO: fix hack with height below
-                      [(scrollable headers-table) "spanx 3,grow,pushy,height 0.1*pref,wrap"]
+                      [(scrollable headers-table) "spanx 3,grow,height 0.1*pref,wrap"]
                       ["Body", "wrap"]
-                      [(scrollable body-text-area) "spanx 3,grow,pushy"]])]
+                      [(scrollable body-text-area) "spanx 3,grow"]])]
         form))))
 
 (defn- get-request-type
@@ -52,6 +54,8 @@
       (selected? request-delete-type) :delete
       :else (throw (IllegalStateException. "None of known methods are selected")))))
 
+(declare do-send)
+
 (defn- install-handlers!
   "Sets up event handling over main form."
   [w]
@@ -62,7 +66,7 @@
         request-type (get-request-type w)
         headers-model (config headers-table :model)]
 
-    ; Add reactions to header manipulation buttons
+    ; Add reactions to header manipulation
     (listen-for add-header-button :action [_]
       (when-let [[header value] (h/ask-header-values :parent w)]
         (append! headers-model {:name header :value value})))
@@ -97,8 +101,22 @@
             (when-let [[new-name new-value] (h/ask-header-values :parent w :default-name name :default-value value)]
               (update-at! headers-model sel-idx {:name new-name :value new-value}))))))
 
+    ; Reaction to send button
+    (listen-for send-button :action [_]
+      (do-send w))
     )
   w)
+
+(defn- collect-headers
+  [headers-table])
+
+(defn- do-send
+  [w]
+  (let [url (text (select w [:#address-box]))
+        headers (collect-headers (select w [:#headers-table]))
+        body (text (select w [:#body-text-area]))
+        result-window (r/create-result-window)]
+    (http/send-request (r/create-events-listener result-window) url headers body)))
 
 (defn create-main-frame
   "Creates frame object with main user interface."
