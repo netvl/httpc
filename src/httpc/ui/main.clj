@@ -44,7 +44,7 @@
                       [(scrollable body-text-area) "spanx 3,grow"]])]
         form))))
 
-(defn- get-request-type
+(defn- get-request-method
   [w]
   (let [{:keys [request-get-type request-post-type request-put-type request-delete-type]} (group-by-id w)]
     (cond
@@ -63,7 +63,6 @@
                 move-header-up-button move-header-down-button send-button
 
                 address-box headers-table body-text-area]} (group-by-id w)
-        request-type (get-request-type w)
         headers-model (config headers-table :model)]
 
     ; Add reactions to header manipulation
@@ -108,15 +107,17 @@
   w)
 
 (defn- collect-headers
-  [headers-table])
+  [headers-table]
+  (table->seq headers-table))
 
 (defn- do-send
   [w]
   (let [url (text (select w [:#address-box]))
+        method (get-request-method w)
         headers (collect-headers (select w [:#headers-table]))
         body (text (select w [:#body-text-area]))
         result-window (r/create-result-window)]
-    (http/send-request (r/create-events-listener result-window) url headers body)))
+    (http/send-request (r/create-events-listener result-window) url method headers body)))
 
 (defn create-main-frame
   "Creates frame object with main user interface."
