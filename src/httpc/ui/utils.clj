@@ -26,6 +26,11 @@
       (update-at! target i rj)
       (update-at! target j ri))))
 
+(defn table->seq
+  "Converts whole table model to the seq."
+  [target]
+  (value-at target (range 0 (row-count target))))
+
 (defn relative-location!
   "Applies Window#setPositionRelativeTo to target and parent and returns target."
   [target parent]

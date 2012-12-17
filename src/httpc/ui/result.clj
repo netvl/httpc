@@ -44,13 +44,15 @@
   (with-widgets
     [(text :id :body-size-field :editable? false)
      (text :id :content-type-field :editable? false)
-     (text :id :body-area :multi-line? true :editable? false)]
+     (text :id :body-area :multi-line? true :editable? false)
+     (checkbox :id :body-word-wrap-enabled :selected? false)]
     (mig-panel
       :id :body-tab-panel
-      :constraints ["" "[][grow]" "[][][grow]"]
+      :constraints ["" "[][grow]" "[][][grow][]"]
       :items [["Body size" ""] [body-size-field "growx,wrap"]
               ["Content type" ""] [content-type-field "growx,wrap"]
-              [(scrollable body-area) "grow,spanx 2"]])))
+              [(scrollable body-area) "grow,spanx 2,wrap"]
+              ["Word wrap" ""] [body-word-wrap-enabled "growx"]])))
 
 (defn create-result-panel
   "Creates the main panel."
@@ -79,9 +81,13 @@
         (frame
           :title (str "Result " (next-result-number))
           :on-close :dispose
-          :content (create-result-panel))]
+          :content (create-result-panel))
+        {:keys [close-button
+                body-word-wrap-enabled body-area]} (group-by-id w)]
     (listen-for (select w [:#close-button]) :action [_]
       (dispose! w))
+    (listen-for (select w [:#body-word-wrap-enabled]) :action [_]
+      (config! body-area :wrap-lines? (config body-word-wrap-enabled :selected?)))
     w))
 
 (defn show-result-window
@@ -114,6 +120,7 @@
             (text! status-message-field (:message status)))
           :set-headers
           ([headers]
+            (clear! headers-table)
             (doseq [header headers]
               (append! headers-table header)))
           :set-body

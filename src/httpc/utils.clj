@@ -42,3 +42,8 @@
      ~@(apply concat
          (for [[name [params & body]] (partition-all 2 pairs)]
            [name `(let [{:keys ~params} ~event] ~@body)]))))
+
+(defn kwname
+  "If o is a keyword, its name is returned. Otherwise, (str o) is returned."
+  [o]
+  (if (keyword? o) (name o) (str o)))
