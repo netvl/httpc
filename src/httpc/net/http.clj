@@ -35,7 +35,7 @@
   [true :continue])
 
 (defn handle-error
-  [events-listener client response throwable]
+  [events-listener client response ^java.lang.Throwable throwable]
   (send-event events-listener :set-progress
     :progress "An error occured")
   (.printStackTrace throwable)

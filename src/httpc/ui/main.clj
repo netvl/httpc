@@ -129,8 +129,3 @@
       :on-close :dispose)
     install-handlers!))
 
-(defn present!
-  "Shows a frame from Swing UI thread."
-  [w]
-  (invoke-later
-    (-> w pack! show!)))

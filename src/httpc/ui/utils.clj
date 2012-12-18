@@ -41,3 +41,9 @@
   "Simple wrapper for (seesaw.core/listen) for more fluent definition of listeners."
   [target event arglist & body]
   `(listen ~target ~event (fn ~arglist ~@body)))
+
+(defn present!
+  "Shows a frame from Swing UI thread."
+  [w]
+  (invoke-later
+    (-> w pack! show!)))
